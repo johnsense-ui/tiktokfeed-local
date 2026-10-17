@@ -21,6 +21,7 @@ jobs:
 
       - name: 编译（未签名）
         run: |
+          set -o pipefail
           xcodebuild \
             -project "TikTok Video Feed Swift.xcodeproj" \
             -target "TikTok Video Feed Swift" \
@@ -40,7 +41,13 @@ jobs:
             tail -80 build.log
             exit 1
           fi
-          echo "APP=$APP"
+          EXE_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$APP/Info.plist")
+          if [ ! -f "$APP/$EXE_NAME" ]; then
+            echo "::error::app 里没有可执行文件（编译没真正成功）"
+            tail -80 build.log
+            exit 1
+          fi
+          echo "APP=$APP  EXE=$EXE_NAME"
 
       - name: 失败保日志
         if: failure()
